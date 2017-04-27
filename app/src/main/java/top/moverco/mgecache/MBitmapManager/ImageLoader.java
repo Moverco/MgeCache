@@ -36,6 +36,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import top.moverco.mgecache.R;
+
 
 public class ImageLoader {
     private static final String TAG = "top.moverco.ImageLoader";
@@ -48,8 +50,10 @@ public class ImageLoader {
     private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
     private static final int MAX_POOL_SIZE = CPU_COUNT * 2 + 1;
     private static final long KEEP_ALIVE = 10L;
-    // TODO: 27/04/2017
-    private static final int TAG_KEY_URI = 0x19283647;
+    /**
+     * Bind image id from layout resource
+     */
+    private static final int TAG_KEY_URI = R.id.image;
     /**
      * Define size of disk cache
      */
@@ -74,6 +78,19 @@ public class ImageLoader {
     private LruCache<String, Bitmap> mLruCache;
 
     private DiskLruCache mDiskLruCache;
+
+    private int reqWidth = 0;
+    private int reqheight = 0;
+
+    public ImageLoader setReqWidth(int reqWidth) {
+        this.reqWidth = reqWidth;
+        return this;
+    }
+
+    public ImageLoader setReqheight(int reqheight) {
+        this.reqheight = reqheight;
+        return this;
+    }
 
     private static final ThreadFactory sThreadFactory = new ThreadFactory() {
         private final AtomicInteger mCount = new AtomicInteger(1);
@@ -162,15 +179,13 @@ public class ImageLoader {
 
     /**
      * Bind ImageView and uri, you can use
-     * {@METHOD bindBitmap(
-     * final String uri,final ImageView imageView,
-     * final int reqWidth,final int reqHeight)}
+     * {@link #bindBitmap(String, ImageView, int, int)}
      * to define require width and height of bitmap
      * @param uri
      * @param imageView
      */
     public void bindBitmap(final String uri,final ImageView imageView){
-        bindBitmap(uri,imageView,0,0);
+        bindBitmap(uri,imageView,this.reqWidth,this.reqheight);
     }
     public void bindBitmap(final String uri, final ImageView imageView, final int reqWidth, final int reqHeight) {
         imageView.setTag(TAG_KEY_URI, uri);
@@ -192,6 +207,10 @@ public class ImageLoader {
         THREAD_POOL_EXECUTOR.execute(loadBitmapTask);
     }
 
+
+    public Bitmap loadBitamap(String uri){
+        return loadBitmap(uri,this.reqWidth,this.reqheight);
+    }
     /**
      * The priority of load bitmap is MemoryCache > DiskCache > Http.
      * @param uri
@@ -244,6 +263,7 @@ public class ImageLoader {
         }
         return bitmap;
     }
+
 
 
     private Bitmap loadBitmapFromHttp(String url, int reqWidth, int reqHeight) throws IOException {

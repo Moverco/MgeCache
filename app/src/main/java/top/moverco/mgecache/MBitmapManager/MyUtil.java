@@ -5,9 +5,6 @@ import android.util.Log;
 import java.io.Closeable;
 import java.io.IOException;
 
-/**
- * Created by liuzongxiang on 27/04/2017.
- */
 
 final public class MyUtil {
     public static final String TAG = "MYUTIL";
