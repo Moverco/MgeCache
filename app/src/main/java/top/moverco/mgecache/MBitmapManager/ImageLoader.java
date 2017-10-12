@@ -44,7 +44,7 @@ public class ImageLoader {
     public static final int MESSAGE_POST_RESULT = 1;
     /**
      * CPU_COUNT CORE_POOL_SIZE MAX_POOL_SIZE KEEP_ALIVE used to create a
-     *  thread pool
+     * thread pool
      */
     private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
     private static final int CORE_POOL_SIZE = CPU_COUNT + 1;
@@ -134,8 +134,9 @@ public class ImageLoader {
 
     /**
      * Get how many compacity can be used to restore cache
+     *
      * @param dir
-     * @return  Usable space
+     * @return Usable space
      */
     private long getUsableSpace(File dir) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
@@ -168,6 +169,7 @@ public class ImageLoader {
 
     /**
      * Add bitmap to memory cache through LruCache
+     *
      * @param key
      * @param bitmap
      */
@@ -181,12 +183,14 @@ public class ImageLoader {
      * Bind ImageView and uri, you can use
      * {@link #bindBitmap(String, ImageView, int, int)}
      * to define require width and height of bitmap
+     *
      * @param uri
      * @param imageView
      */
-    public void bindBitmap(final String uri,final ImageView imageView){
-        bindBitmap(uri,imageView,this.reqWidth,this.reqheight);
+    public void bindBitmap(final String uri, final ImageView imageView) {
+        bindBitmap(uri, imageView, this.reqWidth, this.reqheight);
     }
+
     public void bindBitmap(final String uri, final ImageView imageView, final int reqWidth, final int reqHeight) {
         imageView.setTag(TAG_KEY_URI, uri);
         Bitmap bitmap = loadBitmapFromMemCache(uri);
@@ -208,11 +212,13 @@ public class ImageLoader {
     }
 
 
-    public Bitmap loadBitamap(String uri){
-        return loadBitmap(uri,this.reqWidth,this.reqheight);
+    public Bitmap loadBitamap(String uri) {
+        return loadBitmap(uri, this.reqWidth, this.reqheight);
     }
+
     /**
      * The priority of load bitmap is MemoryCache > DiskCache > Http.
+     *
      * @param uri
      * @param width
      * @param height
@@ -225,7 +231,7 @@ public class ImageLoader {
             return bitmap;
         }
 
-        bitmap = loadBitmapFromDiskCache(uri,width,height);
+        bitmap = loadBitmapFromDiskCache(uri, width, height);
         if (bitmap != null) {
             Log.d(TAG, "Bitmap has been loaded from disk cache");
             return bitmap;
@@ -233,7 +239,7 @@ public class ImageLoader {
         try {
             bitmap = loadBitmapFromHttp(uri, width, height);
         } catch (IOException e) {
-            Log.d(TAG,"load bitmap from http failed");
+            Log.d(TAG, "load bitmap from http failed");
         }
         if (bitmap == null && !mIsDiskLruCacheCreated) {
             Log.w(TAG, "DiskLruCache is not created");
@@ -264,6 +270,27 @@ public class ImageLoader {
         return bitmap;
     }
 
+//    private Bitmap downloadBitamapWithOkhttp(String urlString) {
+//        final Bitmap[] bitmap = {null};
+//        final BufferedInputStream[] in = {null};
+//
+//        OkHttpUtils.get()
+//                .build()
+//                .connTimeOut(8000)
+//                .readTimeOut(8000)
+//                .execute(new BitmapCallback() {
+//                    @Override
+//                    public void onError(Call call, Exception e, int id) {
+//                        Log.d(TAG, "Failed to download bitmap from http");
+//                    }
+//
+//                    @Override
+//                    public void onResponse(Bitmap response, int id) {
+//                        in[0] = new BufferedInputStream(connection.getInputStream(), IO_BUFFER_SIZE);
+//                        bitmap[0] = BitmapFactory.decodeStream(in[0]);
+//                    }
+//                });
+//    }
 
 
     private Bitmap loadBitmapFromHttp(String url, int reqWidth, int reqHeight) throws IOException {
@@ -276,16 +303,16 @@ public class ImageLoader {
         }
         String key = hashKeyFromUrl(url);
 
-            DiskLruCache.Editor editor = mDiskLruCache.edit(key);
-            if (editor != null) {
-                OutputStream outputStream = editor.newOutputStream(DISK_CACHE_INDEX);
-                if (downloadUrlToStream(url, outputStream)) {
-                    editor.commit();
-                } else {
-                    editor.abort();
-                }
-                mDiskLruCache.flush();
+        DiskLruCache.Editor editor = mDiskLruCache.edit(key);
+        if (editor != null) {
+            OutputStream outputStream = editor.newOutputStream(DISK_CACHE_INDEX);
+            if (downloadUrlToStream(url, outputStream)) {
+                editor.commit();
+            } else {
+                editor.abort();
             }
+            mDiskLruCache.flush();
+        }
 
         return loadBitmapFromDiskCache(url, reqWidth, reqHeight);
     }
@@ -298,20 +325,20 @@ public class ImageLoader {
         try {
             final URL url = new URL(urlString);
             connection = (HttpURLConnection) url.openConnection();
-            in = new BufferedInputStream(connection.getInputStream(),IO_BUFFER_SIZE);
-            out = new BufferedOutputStream(stream,IO_BUFFER_SIZE);
+            in = new BufferedInputStream(connection.getInputStream(), IO_BUFFER_SIZE);
+            out = new BufferedOutputStream(stream, IO_BUFFER_SIZE);
 
             int b;
-            while ((b = in.read())!=-1){
+            while ((b = in.read()) != -1) {
                 out.write(b);
             }
             return true;
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            Log.e(TAG,"download failed");
-        }finally {
-            if (connection!=null){
+            Log.e(TAG, "download failed");
+        } finally {
+            if (connection != null) {
                 connection.disconnect();
             }
             MyUtil.close(in);
@@ -336,7 +363,7 @@ public class ImageLoader {
                 FileDescriptor fileDescriptor = fileInputStream.getFD();
                 bitmap = mResizer.decodeSampleFromFileDescriptor(fileDescriptor, reqheight, reqWidth);
                 if (bitmap != null) {
-                    addBitmapToMemoryCache(key,bitmap);
+                    addBitmapToMemoryCache(key, bitmap);
                 }
             }
         } catch (IOException e) {
@@ -381,7 +408,6 @@ public class ImageLoader {
     }
 
 
-
     private Handler mMainHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -399,17 +425,17 @@ public class ImageLoader {
     };
 
 
-private static class LoaderResult {
-    public ImageView mImageView;
-    public String uri;
-    public Bitmap mBitmap;
+    private static class LoaderResult {
+        public ImageView mImageView;
+        public String uri;
+        public Bitmap mBitmap;
 
-    public LoaderResult(ImageView imageView, String uri, Bitmap bitmap) {
-        mImageView = imageView;
-        this.uri = uri;
-        mBitmap = bitmap;
+        public LoaderResult(ImageView imageView, String uri, Bitmap bitmap) {
+            mImageView = imageView;
+            this.uri = uri;
+            mBitmap = bitmap;
+        }
     }
-}
 
 
 }
